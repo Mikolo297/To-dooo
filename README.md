@@ -4,13 +4,12 @@ A high-fidelity, interactive Todo Item Card built with semantic HTML, CSS, and v
 
 ## Live URL
 
-> **https://YOUR-DEPLOYED-URL** *(replace after deploying to Netlify/Vercel/GitHub Pages)*
-
+> https://to-do-card-nine.vercel.app/
 ## How to Run Locally
 
 ```bash
 # Clone the repo
-git clone https://github.com/YOUR_USERNAME/todo-card.git
+git clone https://github.com/Mikolo297/To-dooo.git
 cd todo-card
 
 # Open directly in browser — no build step needed
