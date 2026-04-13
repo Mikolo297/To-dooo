@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Todo Card</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:ital,wght@0,400;0,500;1,400&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet" />
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0c0d0f;
+      --surface:   #141618;
+      --surface2:  #1c1e22;
+      --border:    #2a2d33;
+      --border2:   #383c44;
+      --text:      #e8eaf0;
+      --muted:     #6b7280;
+      --accent:    #f0c55a;
+      --accent2:   #e8a838;
+      --red:       #f87171;
+      --green:     #4ade80;
+      --blue:      #60a5fa;
+      --purple:    #c084fc;
+      --orange:    #fb923c;
+    }
+
+    body {
+      background: var(--bg);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'DM Sans', sans-serif;
+      padding: 2rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* background grid */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(var(--border) 1px, transparent 1px),
+        linear-gradient(90deg, var(--border) 1px, transparent 1px);
+      background-size: 48px 48px;
+      opacity: 0.25;
+      pointer-events: none;
+    }
+
+    /* glow blob */
+    body::after {
+      content: '';
+      position: fixed;
+      top: 20%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 600px;
+      height: 300px;
+      background: radial-gradient(ellipse, rgba(240,197,90,0.06) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    /* ── CARD ── */
+    article[data-testid="test-todo-card"] {
+      position: relative;
+      width: 100%;
+      max-width: 520px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 28px;
+      box-shadow:
+        0 0 0 1px rgba(255,255,255,0.03) inset,
+        0 24px 60px rgba(0,0,0,0.5),
+        0 8px 20px rgba(0,0,0,0.3);
+      animation: cardIn 0.5s cubic-bezier(0.16,1,0.3,1) both;
+    }
+
+    @keyframes cardIn {
+      from { opacity: 0; transform: translateY(24px) scale(0.97); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    /* top accent line */
+    article[data-testid="test-todo-card"]::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 20px; right: 20px;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
+      border-radius: 0 0 4px 4px;
+    }
+
+    /* ── HEADER ROW ── */
+    .card-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+
+    /* Checkbox */
+    .checkbox-wrap {
+      flex-shrink: 0;
+      margin-top: 3px;
+    }
+
+    .checkbox-wrap input[type="checkbox"] {
+      appearance: none;
+      -webkit-appearance: none;
+      width: 22px;
+      height: 22px;
+      border: 2px solid var(--border2);
+      border-radius: 6px;
+      background: var(--surface2);
+      cursor: pointer;
+      position: relative;
+      transition: all 0.2s ease;
+    }
+
+    .checkbox-wrap input[type="checkbox"]:hover {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(240,197,90,0.12);
+    }
+
+    .checkbox-wrap input[type="checkbox"]:checked {
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+
+    .checkbox-wrap input[type="checkbox"]:checked::after {
+      content: '';
+      position: absolute;
+      top: 3px; left: 6px;
+      width: 6px; height: 10px;
+      border: 2px solid #0c0d0f;
+      border-top: none;
+      border-left: none;
+      transform: rotate(45deg);
+    }
+
+    .title-group { flex: 1; }
+
+    /* Title */
+    h2[data-testid="test-todo-title"] {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.3;
+      letter-spacing: -0.02em;
+      transition: color 0.2s;
+    }
+
+    .completed h2[data-testid="test-todo-title"] {
+      color: var(--muted);
+      text-decoration: line-through;
+      text-decoration-color: var(--border2);
+    }
+
+    /* Priority badge */
+    span[data-testid="test-todo-priority"] {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.65rem;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 3px 9px;
+      border-radius: 20px;
+      margin-top: 6px;
+    }
+
+    span[data-testid="test-todo-priority"].high {
+      background: rgba(248,113,113,0.12);
+      color: var(--red);
+      border: 1px solid rgba(248,113,113,0.25);
+    }
+    span[data-testid="test-todo-priority"].medium {
+      background: rgba(251,146,60,0.12);
+      color: var(--orange);
+      border: 1px solid rgba(251,146,60,0.25);
+    }
+    span[data-testid="test-todo-priority"].low {
+      background: rgba(74,222,128,0.10);
+      color: var(--green);
+      border: 1px solid rgba(74,222,128,0.2);
+    }
+
+    .priority-dot {
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: currentColor;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%,100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    /* action buttons */
+    .card-actions {
+      display: flex;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .card-actions button {
+      width: 32px; height: 32px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface2);
+      color: var(--muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.18s ease;
+      font-size: 0.85rem;
+    }
+
+    .card-actions button:hover {
+      border-color: var(--border2);
+      color: var(--text);
+      transform: translateY(-1px);
+    }
+
+    button[data-testid="test-todo-delete-button"]:hover {
+      border-color: rgba(248,113,113,0.4);
+      color: var(--red);
+      background: rgba(248,113,113,0.08);
+    }
+
+    button[data-testid="test-todo-edit-button"]:hover {
+      border-color: rgba(240,197,90,0.4);
+      color: var(--accent);
+      background: rgba(240,197,90,0.08);
+    }
+
+    /* ── DESCRIPTION ── */
+    p[data-testid="test-todo-description"] {
+      font-size: 0.88rem;
+      color: var(--muted);
+      line-height: 1.65;
+      margin-bottom: 20px;
+      padding-left: 36px;
+    }
+
+    .completed p[data-testid="test-todo-description"] {
+      opacity: 0.5;
+    }
+
+    /* ── DIVIDER ── */
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin-bottom: 18px;
+    }
+
+    /* ── META ROW ── */
+    .meta-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+    }
+
+    .meta-item {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .meta-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.6rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    time[data-testid="test-todo-due-date"],
+    time[data-testid="test-todo-time-remaining"] {
+      font-size: 0.82rem;
+      font-weight: 500;
+    }
+
+    time[data-testid="test-todo-due-date"] {
+      color: var(--text);
+    }
+
+    time[data-testid="test-todo-time-remaining"] {
+      color: var(--accent);
+    }
+
+    time[data-testid="test-todo-time-remaining"].overdue {
+      color: var(--red);
+    }
+
+    time[data-testid="test-todo-time-remaining"].soon {
+      color: var(--orange);
+    }
+
+    /* ── STATUS ── */
+    .status-wrap {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    span[data-testid="test-todo-status"] {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.78rem;
+      font-weight: 500;
+      color: var(--text);
+    }
+
+    .status-pip {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+    }
+
+    .status-pip.in-progress { background: var(--blue); box-shadow: 0 0 6px var(--blue); }
+    .status-pip.todo        { background: var(--muted); }
+    .status-pip.done        { background: var(--green); box-shadow: 0 0 6px var(--green); }
+    .status-pip.blocked     { background: var(--red); box-shadow: 0 0 6px var(--red); }
+
+    /* ── TAGS ── */
+    ul[data-testid="test-todo-tags"] {
+      list-style: none;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      margin-top: 4px;
+    }
+
+    ul[data-testid="test-todo-tags"] li {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.68rem;
+      padding: 4px 10px;
+      border-radius: 6px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      letter-spacing: 0.04em;
+      transition: all 0.15s;
+      cursor: default;
+    }
+
+    ul[data-testid="test-todo-tags"] li:hover {
+      border-color: var(--border2);
+      color: var(--text);
+    }
+
+    /* ── COMPLETED STATE ── */
+    .completed {
+      opacity: 0.75;
+    }
+
+    .completed article {
+      border-color: var(--border);
+    }
+  </style>
+</head>
+<body>
+
+<article data-testid="test-todo-card">
+
+  <!-- HEADER: checkbox + title + actions -->
+  <div class="card-header">
+    <div class="checkbox-wrap">
+      <label for="todo-check" style="display:none">Mark complete</label>
+      <input
+        type="checkbox"
+        id="todo-check"
+        data-testid="test-todo-complete-toggle"
+        aria-label="Mark task as complete"
+        onchange="toggleComplete(this)"
+      />
+    </div>
+
+    <div class="title-group">
+      <h2 data-testid="test-todo-title">Redesign onboarding flow for mobile</h2>
+      <span data-testid="test-todo-priority" class="high">
+        <span class="priority-dot"></span>
+        High Priority
+      </span>
+    </div>
+
+    <div class="card-actions">
+      <button
+        data-testid="test-todo-edit-button"
+        aria-label="Edit task"
+        onclick="handleEdit()"
+        title="Edit"
+      >
+        ✎
+      </button>
+      <button
+        data-testid="test-todo-delete-button"
+        aria-label="Delete task"
+        onclick="handleDelete()"
+        title="Delete"
+      >
+        ✕
+      </button>
+    </div>
+  </div>
+
+  <!-- DESCRIPTION -->
+  <p data-testid="test-todo-description">
+    Audit the current onboarding steps, identify friction points, and produce wireframes for a streamlined 3-step mobile experience. Coordinate with the copy team for microcopy updates.
+  </p>
+
+  <div class="divider"></div>
+
+  <!-- META: due date + time remaining + status -->
+  <div class="meta-row">
+    <div class="meta-item">
+      <span class="meta-label">Due date</span>
+      <time data-testid="test-todo-due-date" id="due-date-display" datetime=""></time>
+    </div>
+
+    <div class="meta-item">
+      <span class="meta-label">Time remaining</span>
+      <time data-testid="test-todo-time-remaining" id="time-remaining-display" datetime=""></time>
+    </div>
+
+    <div class="meta-item">
+      <span class="meta-label">Status</span>
+      <div class="status-wrap">
+        <span class="status-pip in-progress"></span>
+        <span data-testid="test-todo-status">In Progress</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAGS -->
+  <div>
+    <span class="meta-label" style="display:block; margin-bottom:8px;">Categories</span>
+    <ul data-testid="test-todo-tags" role="list" aria-label="Task categories">
+      <li data-testid="test-todo-tag-design">design</li>
+      <li data-testid="test-todo-tag-mobile">mobile</li>
+      <li data-testid="test-todo-tag-ux">ux</li>
+      <li data-testid="test-todo-tag-q2">q2</li>
+    </ul>
+  </div>
+
+</article>
+
+<script>
+  // Due date: set to 4 days from now for demo
+  const DUE = new Date();
+  DUE.setDate(DUE.getDate() + 4);
+  DUE.setHours(17, 0, 0, 0);
+
+  function formatDueDate(date) {
+    return date.toLocaleDateString('en-US', {
+      month: 'short', day: 'numeric', year: 'numeric'
+    }).replace(',', ','); // "Apr 15, 2026"
+    // prefix "Due "
+  }
+
+  function formatTimeRemaining(date) {
+    const now = new Date();
+    const diffMs = date - now;
+    const diffSec = Math.round(diffMs / 1000);
+    const absSec = Math.abs(diffSec);
+
+    const mins  = Math.floor(absSec / 60);
+    const hours = Math.floor(absSec / 3600);
+    const days  = Math.floor(absSec / 86400);
+
+    let label = '';
+    if (diffSec < 0) {
+      if (absSec < 3600)       label = `Overdue by ${mins} min${mins !== 1 ? 's' : ''}`;
+      else if (absSec < 86400) label = `Overdue by ${hours} hour${hours !== 1 ? 's' : ''}`;
+      else                     label = `Overdue by ${days} day${days !== 1 ? 's' : ''}`;
+      return { label, cls: 'overdue' };
+    } else {
+      if (absSec < 3600)       label = `Due in ${mins} min${mins !== 1 ? 's' : ''}`;
+      else if (absSec < 86400) label = `Due in ${hours} hour${hours !== 1 ? 's' : ''}`;
+      else if (days <= 3)      label = `Due in ${days} day${days !== 1 ? 's' : ''}`;
+      else                     label = `Due in ${days} days`;
+      const cls = days <= 1 ? 'soon' : '';
+      return { label, cls };
+    }
+  }
+
+  function updateTimes() {
+    const dueDateEl = document.getElementById('due-date-display');
+    const timeRemEl = document.getElementById('time-remaining-display');
+
+    dueDateEl.setAttribute('datetime', DUE.toISOString());
+    dueDateEl.textContent = 'Due ' + formatDueDate(DUE);
+
+    const { label, cls } = formatTimeRemaining(DUE);
+    timeRemEl.setAttribute('datetime', DUE.toISOString());
+    timeRemEl.textContent = label;
+    timeRemEl.className = cls;
+  }
+
+  // Initial render
+  updateTimes();
+  // Update every 30 seconds
+  setInterval(updateTimes, 30000);
+
+  function toggleComplete(cb) {
+    const card = document.querySelector('[data-testid="test-todo-card"]');
+    if (cb.checked) {
+      card.classList.add('completed');
+    } else {
+      card.classList.remove('completed');
+    }
+  }
+
+  function handleEdit() {
+    alert('Edit clicked — wire up your edit flow here!');
+  }
+
+  function handleDelete() {
+    const card = document.querySelector('[data-testid="test-todo-card"]');
+    card.style.transition = 'opacity 0.3s, transform 0.3s';
+    card.style.opacity = '0';
+    card.style.transform = 'scale(0.95)';
+    setTimeout(() => card.style.cssText = '', 600);
+  }
+</script>
+
+</body>
+</html>
